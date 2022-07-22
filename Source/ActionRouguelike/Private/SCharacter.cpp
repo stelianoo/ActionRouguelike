@@ -25,6 +25,9 @@ ASCharacter::ASCharacter()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
+
+
+	InteractionComponent = CreateDefaultSubobject<USInteractionComponent>("Interact");
 	
 }
 
@@ -65,6 +68,16 @@ void ASCharacter::MoveRight(float value)
 
 void ASCharacter::PrimaryAttack()
 {
+
+	PlayAnimMontage(AnimationMontage);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,this,&ASCharacter::PrimaryAttackTimeElapsed,ProjectileDelay);
+	
+	
+}
+
+void ASCharacter::PrimaryAttackTimeElapsed()
+{
 	FVector SocketLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 	
 	FTransform SpawnTransform = FTransform(GetControlRotation(),SocketLocation);
@@ -73,6 +86,13 @@ void ASCharacter::PrimaryAttack()
 	SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
 	GetWorld()->SpawnActor<AActor>(ProjectileClass,SpawnTransform,SpawnParam);
+}
+
+void ASCharacter::Interact()
+{
+
+	InteractionComponent->PrimaryInteract();
+	
 }
 
 // Called to bind functionality to input
@@ -89,8 +109,12 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction
 	("PrimaryAttack",IE_Pressed,this,&ASCharacter::PrimaryAttack);
+
 	PlayerInputComponent->BindAction
 	("Jump",IE_Pressed,this,&ASCharacter::Jump);
+
+	PlayerInputComponent->BindAction
+	("Interact",IE_Pressed,this,&ASCharacter::Interact);
 	
 }
 
