@@ -3,29 +3,21 @@
 
 #include "SMagicProjectile.h"
 
+
+#include "SAttributeComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Particles/ParticleSystemComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
-ASMagicProjectile::ASMagicProjectile()
+ASMagicProjectile::ASMagicProjectile() : ASBaseProjectile()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SphereComponent = CreateDefaultSubobject<USphereComponent>("SphereComp");
-	SphereComponent->SetCollisionProfileName("Projectile");
-	RootComponent = SphereComponent;
+	ProjectileMovmComp->InitialSpeed = 2500;
 
-	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>("EffectComp");
-	EffectComp->SetupAttachment(RootComponent);
-	
-	ProjectileMovmComp = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovmComp");
-	ProjectileMovmComp->InitialSpeed = 2000;
-	ProjectileMovmComp->bRotationFollowsVelocity = true;
-	ProjectileMovmComp->bInitialVelocityInLocalSpace = true;
-	
 	
 }
 
@@ -33,13 +25,30 @@ ASMagicProjectile::ASMagicProjectile()
 void ASMagicProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SphereComponent->OnComponentBeginOverlap.AddDynamic(this,&ASMagicProjectile::HitEvent);
 	
 }
 
-// Called every frame
+void ASMagicProjectile::HitEvent(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
+	UPrimitiveComponent* PrimitiveComponent1, int I, bool bArg, const FHitResult& HitResult)
+{
+	if (Actor)
+	{
+		USAttributeComponent* Atribute = Cast<USAttributeComponent>(Actor->GetComponentByClass(USAttributeComponent::StaticClass()));
+		if (Atribute)
+		{
+			Atribute->ApplyHealthChange(-20);
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),EndParticle,GetActorLocation());
+			Destroy();
+		}
+	}
+}
+
+
+
 void ASMagicProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 

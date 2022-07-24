@@ -3,33 +3,39 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SGameplayInterface.h"
 #include "GameFramework/Actor.h"
-#include "SItemChest.generated.h"
+#include "SBaseProjectile.generated.h"
+
+class USphereComponent;
+class UProjectileMovementComponent;
+class UParticleSystemComponent;
 
 UCLASS()
-class ACTIONROUGUELIKE_API ASItemChest : public AActor, public ISGameplayInterface
+class ACTIONROUGUELIKE_API ASBaseProjectile : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ASItemChest();
+	ASBaseProjectile();
 
-	UPROPERTY(EditAnywhere)
-	float TargetPitch;
 	
-	void Interact_Implementation(APawn* InteractedPawn) override;
+	UPROPERTY(EditAnywhere,Category = "Effect")
+	UParticleSystem* EndParticle;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
-	UStaticMeshComponent* ChestBase;
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
-	UStaticMeshComponent* ChestTop;
+	USphereComponent* SphereComponent;
 
-	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
+	UProjectileMovementComponent* ProjectileMovmComp;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
+	UParticleSystemComponent* ProjectileEffectComp;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

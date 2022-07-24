@@ -18,11 +18,16 @@ void ASExplosiveBarrel::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherAct
 		
 		if (Cast<ASMagicProjectile>(OtherActor))
 		{
-			RadialForceComponent->FireImpulse();
-			EffectComp->Activate();
-			//this->Destroy();
+			Explode();
 		}
 	}
+}
+
+void ASExplosiveBarrel::Explode()
+{
+	RadialForceComponent->FireImpulse();
+	EffectComp->Activate();
+	//this->Destroy();
 }
 
 // Sets default values
@@ -40,12 +45,17 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	
 	RadialForceComponent = CreateDefaultSubobject<URadialForceComponent>("RadialForceComp");
 	RadialForceComponent->SetupAttachment(RootComponent);
+	RadialForceComponent->SetAutoActivate(false);
+
+	RadialForceComponent->AddCollisionChannelToAffect(ECC_WorldDynamic);
 	
 
 	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>("EffectComp");
 	EffectComp->SetupAttachment(RootComponent);
 	
 }
+
+
 
 // Called when the game starts or when spawned
 void ASExplosiveBarrel::BeginPlay()

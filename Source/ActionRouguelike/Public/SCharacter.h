@@ -3,21 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SInteractionComponent.h"
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class ASBaseProjectile;
 class USpringArmComponent;
 class UCameraComponent;
+class USAttributeComponent;
+class USInteractionComponent;
 
 UCLASS()
 class ACTIONROUGUELIKE_API ASCharacter : public ACharacter
 {
 	GENERATED_BODY()
 protected:
-	UPROPERTY(EditAnywhere,Category = "Attack")
-	TSubclassOf<AActor> ProjectileClass;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Attack")
+	TSubclassOf<AActor> PrimaryAttackProjectileClass;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Attack")
+	TSubclassOf<AActor> AbilityOneProjectileClass;
+
+	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Attack")
+	TSubclassOf<AActor> AbilityTwoProjectileClass;
+	
+	UPROPERTY(EditAnywhere,Category = "Attack")
+	UParticleSystem* ChargeParticle;
+	
 	UPROPERTY(EditAnywhere,Category = "Attack")
 	UAnimMontage* AnimationMontage;
 	
@@ -40,6 +52,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	USInteractionComponent* InteractionComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	USAttributeComponent* AttributeComponent;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -53,8 +68,10 @@ public:
 
 	void MoveRight(float value);
 	void PrimaryAttack();
-	void PrimaryAttackTimeElapsed();
+	void PrimaryAttackTimeElapsed(TSubclassOf<AActor> SpawnClass);
 	void Interact();
+	void AbilityOne();
+	void AbilityTwo();
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

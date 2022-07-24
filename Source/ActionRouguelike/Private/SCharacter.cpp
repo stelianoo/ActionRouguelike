@@ -3,10 +3,13 @@
 
 #include "SCharacter.h"
 
-#include "SMagicProjectile.h"
+
+#include "SAttributeComponent.h"
+#include "SInteractionComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -14,20 +17,21 @@ ASCharacter::ASCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringgArmComp");
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
 	SpringArmComponent->SetupAttachment(RootComponent);
 	SpringArmComponent->bUsePawnControlRotation = true;
 
-
 	
-	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraaComp");
+	
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComponent->SetupAttachment(SpringArmComponent);
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
 
 
-	InteractionComponent = CreateDefaultSubobject<USInteractionComponent>("Interact");
+	InteractionComponent = CreateDefaultSubobject<USInteractionComponent>("InteractComp");
+	AttributeComponent = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
 	
 }
 
@@ -68,25 +72,72 @@ void ASCharacter::MoveRight(float value)
 
 void ASCharacter::PrimaryAttack()
 {
-
 	PlayAnimMontage(AnimationMontage);
 
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,this,&ASCharacter::PrimaryAttackTimeElapsed,ProjectileDelay);
+	const FTimerDelegate AttackAction  = FTimerDelegate::CreateUObject(this,
+		&ASCharacter::PrimaryAttackTimeElapsed, PrimaryAttackProjectileClass);
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,AttackAction,0.2f,false);
+}
+
+void ASCharacter::AbilityOne()
+{
+	PlayAnimMontage(AnimationMontage);
 	
+	const FTimerDelegate AttackAction  = FTimerDelegate::CreateUObject(this,
+		&ASCharacter::PrimaryAttackTimeElapsed, AbilityOneProjectileClass);
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,AttackAction,0.2f,false);
 	
 }
 
-void ASCharacter::PrimaryAttackTimeElapsed()
+void ASCharacter::AbilityTwo()
 {
-	FVector SocketLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+	PlayAnimMontage(AnimationMontage);
+
+	const FTimerDelegate AttackAction  = FTimerDelegate::CreateUObject(this,
+		&ASCharacter::PrimaryAttackTimeElapsed, AbilityTwoProjectileClass);
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,AttackAction,0.2f,false);
 	
-	FTransform SpawnTransform = FTransform(GetControlRotation(),SocketLocation);
+}
+
+void ASCharacter::PrimaryAttackTimeElapsed(TSubclassOf<AActor> SpawnProjectile)
+{
+	// Cast Effect
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),ChargeParticle,
+			GetMesh()->GetSocketLocation("Muzzle_01"));
+	
+	FVector StartProjectileLocation = GetMesh()->GetSocketLocation("Muzzle_01");
+	
+	FTransform CameraTransform = CameraComponent->GetComponentTransform();
+
+	FVector CameraTraceEndPoint =
+		CameraTransform.GetLocation() + CameraTransform.GetRotation().GetForwardVector()*50000;
+	
+	FCollisionObjectQueryParams ObjQueryParam;
+	ObjQueryParam.AddObjectTypesToQuery(ECC_WorldStatic);
+	ObjQueryParam.AddObjectTypesToQuery(ECC_WorldDynamic);
+	FHitResult HitResult;
+	bool hit =	GetWorld()->LineTraceSingleByObjectType(
+		HitResult,CameraTransform.GetLocation(),CameraTraceEndPoint,ObjQueryParam);
+
+	// DrawDebugLine(GetWorld(),CameraTransform.GetLocation(),CameraTraceEndPoint,
+	// 	FColor::Blue,false,5,100,2);
+
+	FVector EndProjectileLocation =	hit? HitResult.ImpactPoint:CameraTraceEndPoint;
+
+	DrawDebugSphere(GetWorld(),EndProjectileLocation,10,10,FColor::Black,
+		false,5,10,2);
+
+	FRotator RotationToTarget = (EndProjectileLocation - StartProjectileLocation).Rotation();
+
+	FTransform SpawnTransform = FTransform(RotationToTarget,StartProjectileLocation);
 
 	FActorSpawnParameters SpawnParam;
 	SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	
-	GetWorld()->SpawnActor<AActor>(ProjectileClass,SpawnTransform,SpawnParam);
+	SpawnParam.Instigator = this;
+	GetWorld()->SpawnActor<AActor>(SpawnProjectile,SpawnTransform,SpawnParam);
 }
+
+
 
 void ASCharacter::Interact()
 {
@@ -107,14 +158,15 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	
 	PlayerInputComponent->BindAxis("LockUp",this,&APawn::AddControllerPitchInput);
 
-	PlayerInputComponent->BindAction
-	("PrimaryAttack",IE_Pressed,this,&ASCharacter::PrimaryAttack);
+	PlayerInputComponent->BindAction("PrimaryAttack",IE_Pressed,this,&ASCharacter::PrimaryAttack);
 
-	PlayerInputComponent->BindAction
-	("Jump",IE_Pressed,this,&ASCharacter::Jump);
+	PlayerInputComponent->BindAction("AbilityOne",IE_Pressed,this,&ASCharacter::AbilityOne);
 
-	PlayerInputComponent->BindAction
-	("Interact",IE_Pressed,this,&ASCharacter::Interact);
+	PlayerInputComponent->BindAction("AbilityTwo",IE_Pressed,this,&ASCharacter::AbilityTwo);
+	
+	PlayerInputComponent->BindAction("Jump",IE_Pressed,this,&ASCharacter::Jump);
+
+	PlayerInputComponent->BindAction("Interact",IE_Pressed,this,&ASCharacter::Interact);
 	
 }
 

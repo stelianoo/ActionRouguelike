@@ -23,18 +23,23 @@ public:
 	// Sets default values for this actor's properties
 	ASExplosiveBarrel();
 
+	UFUNCTION(BlueprintCallable)
+ 	void Explode();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	UStaticMeshComponent* StaticMeshComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	URadialForceComponent* RadialForceComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	UParticleSystemComponent* EffectComp;
+
+	
 
 public:	
 	// Called every frame

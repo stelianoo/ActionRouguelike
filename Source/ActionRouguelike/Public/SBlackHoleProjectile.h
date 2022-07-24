@@ -3,32 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SGameplayInterface.h"
-#include "GameFramework/Actor.h"
-#include "SItemChest.generated.h"
+#include "SBaseProjectile.h"
+#include "SBlackHoleProjectile.generated.h"
 
+class URadialForceComponent;
 UCLASS()
-class ACTIONROUGUELIKE_API ASItemChest : public AActor, public ISGameplayInterface
+class ACTIONROUGUELIKE_API ASBlackHoleProjectile : public ASBaseProjectile
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ASItemChest();
+	ASBlackHoleProjectile();
 
-	UPROPERTY(EditAnywhere)
-	float TargetPitch;
-	
-	void Interact_Implementation(APawn* InteractedPawn) override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
-	UStaticMeshComponent* ChestBase;
-	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
-	UStaticMeshComponent* ChestTop;
-
+	URadialForceComponent* RadialForceComponent;
 	
 public:	
 	// Called every frame
