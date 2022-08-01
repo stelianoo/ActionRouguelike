@@ -75,4 +75,12 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintCallable)
+	void OnHealthChange(AActor* ActorInstigator,USAttributeComponent* OwningComp,float NewHealth,float Change);
+
+	UFUNCTION()
+	void BeginOverlap(UPrimitiveComponent* PrimitiveComponent, AActor* Actor, UPrimitiveComponent* PrimitiveComponent1, int I, bool bArg, const FHitResult& HitResult);
+	virtual void PostInitializeComponents() override;
 };
+
+

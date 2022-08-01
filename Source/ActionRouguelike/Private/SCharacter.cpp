@@ -7,6 +7,7 @@
 #include "SAttributeComponent.h"
 #include "SInteractionComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -20,20 +21,26 @@ ASCharacter::ASCharacter()
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
 	SpringArmComponent->SetupAttachment(RootComponent);
 	SpringArmComponent->bUsePawnControlRotation = true;
-
-	
 	
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComponent->SetupAttachment(SpringArmComponent);
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = false;
-
-
+	
 	InteractionComponent = CreateDefaultSubobject<USInteractionComponent>("InteractComp");
 	AttributeComponent = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
-	
 }
+
+void ASCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	AttributeComponent->OnHealthChange.AddDynamic(this, &ASCharacter::OnHealthChange);
+	// GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,
+	// 	InteractionComponent->OnOverlapBegin);
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,&ASCharacter::BeginOverlap);
+}
+
 
 // Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
@@ -55,7 +62,6 @@ void ASCharacter::MoveForward(float value)
 	ControlRot.Pitch = 0.0f;
 	ControlRot.Roll = 0.0f;
 	
-	
 	AddMovementInput(ControlRot.Vector(),value);
 }
 
@@ -74,6 +80,9 @@ void ASCharacter::PrimaryAttack()
 {
 	PlayAnimMontage(AnimationMontage);
 
+	
+	UGameplayStatics::SpawnEmitterAttached(ChargeParticle,GetMesh(),"Muzzle_01");
+	
 	const FTimerDelegate AttackAction  = FTimerDelegate::CreateUObject(this,
 		&ASCharacter::PrimaryAttackTimeElapsed, PrimaryAttackProjectileClass);
 	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,AttackAction,0.2f,false);
@@ -82,6 +91,8 @@ void ASCharacter::PrimaryAttack()
 void ASCharacter::AbilityOne()
 {
 	PlayAnimMontage(AnimationMontage);
+
+	
 	
 	const FTimerDelegate AttackAction  = FTimerDelegate::CreateUObject(this,
 		&ASCharacter::PrimaryAttackTimeElapsed, AbilityOneProjectileClass);
@@ -102,8 +113,8 @@ void ASCharacter::AbilityTwo()
 void ASCharacter::PrimaryAttackTimeElapsed(TSubclassOf<AActor> SpawnProjectile)
 {
 	// Cast Effect
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),ChargeParticle,
-			GetMesh()->GetSocketLocation("Muzzle_01"));
+	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),ChargeParticle,
+	// 		GetMesh()->GetSocketLocation("Muzzle_01"));
 	
 	FVector StartProjectileLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 	
@@ -134,6 +145,7 @@ void ASCharacter::PrimaryAttackTimeElapsed(TSubclassOf<AActor> SpawnProjectile)
 	FActorSpawnParameters SpawnParam;
 	SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParam.Instigator = this;
+	
 	GetWorld()->SpawnActor<AActor>(SpawnProjectile,SpawnTransform,SpawnParam);
 }
 
@@ -168,5 +180,27 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("Interact",IE_Pressed,this,&ASCharacter::Interact);
 	
+}
+
+void ASCharacter::OnHealthChange(AActor* ActorInstigator, USAttributeComponent* OwningComp, float NewHealth, float Change)
+{
+	if (Change<0)
+	{
+		GetMesh()->SetScalarParameterValueOnMaterials("TimeToHit",GetWorld()->TimeSeconds);
+		GetMesh()->SetScalarParameterValueOnMaterials("HitSpeed",3);
+		GetMesh()->SetVectorParameterValueOnMaterials("HitColor",FVector(1,0,0));
+	}
+	
+	if (NewHealth<=0 && Change <= 0)
+	{
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		DisableInput(PC);
+	}
+}
+
+inline void ASCharacter::BeginOverlap(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
+	UPrimitiveComponent* PrimitiveComponent1, int I, bool bArg, const FHitResult& HitResult)
+{
+	InteractionComponent->OnInteractBeginOverlap(Actor);
 }
 

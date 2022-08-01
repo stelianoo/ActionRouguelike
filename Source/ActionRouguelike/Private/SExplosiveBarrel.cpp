@@ -11,6 +11,7 @@
 void ASExplosiveBarrel::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                                   FVector NormalImpulse, const FHitResult& Hit)
 {
+	
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
 		// if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green,
@@ -27,7 +28,7 @@ void ASExplosiveBarrel::Explode()
 {
 	RadialForceComponent->FireImpulse();
 	EffectComp->Activate();
-	//this->Destroy();
+	Destroy();
 }
 
 // Sets default values
@@ -62,6 +63,8 @@ void ASExplosiveBarrel::BeginPlay()
 {
 	Super::BeginPlay();
 	StaticMeshComponent->OnComponentHit.AddDynamic(this,&ASExplosiveBarrel::OnCompHit);
+	
+	
 }
 
 // Called every frame

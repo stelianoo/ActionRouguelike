@@ -26,11 +26,11 @@ void ASMagicProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SphereComponent->OnComponentBeginOverlap.AddDynamic(this,&ASMagicProjectile::HitEvent);
-	
+	SphereComponent->OnComponentBeginOverlap.AddDynamic(this,&ASMagicProjectile::OverlapEvent);
+	SphereComponent->OnComponentHit.AddDynamic(this,&ASMagicProjectile::HitEvent);
 }
 
-void ASMagicProjectile::HitEvent(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
+void ASMagicProjectile::OverlapEvent(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
 	UPrimitiveComponent* PrimitiveComponent1, int I, bool bArg, const FHitResult& HitResult)
 {
 	if (Actor)
@@ -38,13 +38,26 @@ void ASMagicProjectile::HitEvent(UPrimitiveComponent* PrimitiveComponent, AActor
 		USAttributeComponent* Atribute = Cast<USAttributeComponent>(Actor->GetComponentByClass(USAttributeComponent::StaticClass()));
 		if (Atribute)
 		{
-			Atribute->ApplyHealthChange(-20);
+			Atribute->ApplyHealthChange(-ProjectileDamage);
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),EndParticle,GetActorLocation());
+			UE_LOG(LogTemp,Warning,TEXT("Overlap"));
 			Destroy();
 		}
 	}
 }
 
+void ASMagicProjectile::HitEvent(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
+	UPrimitiveComponent* PrimitiveComponent1, FVector Vector, const FHitResult& HitResult)
+{
+	if (Actor != GetInstigator())
+	{
+		UE_LOG(LogTemp,Warning,TEXT("ObjectHit"));
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),EndParticle,GetActorLocation());
+		Destroy();
+	}
+	
+	
+}
 
 
 void ASMagicProjectile::Tick(float DeltaTime)

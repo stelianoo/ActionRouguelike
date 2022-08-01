@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "SBaseProjectile.generated.h"
 
+class USoundCue;
 class USphereComponent;
 class UProjectileMovementComponent;
 class UParticleSystemComponent;
@@ -23,8 +24,23 @@ public:
 	UPROPERTY(EditAnywhere,Category = "Effect")
 	UParticleSystem* EndParticle;
 	
+	UPROPERTY(EditAnywhere,Category = "Effect")
+	TSubclassOf<UCameraShakeBase> CameraShake;
+
+
+
+	
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	USoundBase* SoundCueStart;
+
+	// UPROPERTY(EditAnywhere,Category = "Sound")
+	// USoundCue* SoundCueLoop;
+	
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	USoundBase* SoundCueEnd;
+	
 protected:
-	// Called when the game starts or when spawned
+	
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
@@ -36,7 +52,16 @@ protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	UParticleSystemComponent* ProjectileEffectComp;
 
-public:	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
+	UAudioComponent* AudioLoopCompt;
+
+	
+	
+public:
+
+	UFUNCTION()
+	void OnProjectileDestroyed(AActor* DestroyedActor);
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
