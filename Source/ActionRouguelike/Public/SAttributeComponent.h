@@ -17,7 +17,16 @@ class ACTIONROUGUELIKE_API USAttributeComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
+
+	UFUNCTION(BlueprintCallable,Category = Attributes)
+	static USAttributeComponent* GetAttributes(AActor* FromActor);
+
+	UFUNCTION(BlueprintCallable,Category = Attributes)
+	static bool IsActorAlive(AActor* Actor);
+
+	UFUNCTION(BlueprintCallable,Category = Attributes)
+	static void ResetHealth(AActor* Actor);
+	
 	USAttributeComponent();
 
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Attributes")
@@ -25,22 +34,28 @@ public:
 	
 protected:
 	
-	UPROPERTY(BlueprintReadOnly,VisibleDefaultsOnly,Category="Attributes")
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Attributes")
 	float Health;
 
 public:
 
+	UFUNCTION(BlueprintCallable) 
+	bool Kill(AActor* Insigator);
+	
 	UPROPERTY(BlueprintAssignable,Category=Events)
 	FOnHealthChange OnHealthChange;
 	
 	UFUNCTION(BlueprintCallable,Category="Attributes")
-	bool ApplyHealthChange(float ChangeValue);
+	bool ApplyHealthChange(AActor* InstigatorActor,float ChangeValue);
 
 	UFUNCTION(BlueprintCallable) 
 	bool IsAlive() const;
 
 	UFUNCTION(BlueprintCallable) 
 	bool IsFullHealth();
+
+	UFUNCTION(BlueprintCallable)
+	float HealthPercent();
 
 protected:
 	virtual void BeginPlay() override;

@@ -4,6 +4,7 @@
 #include "SCharacter.h"
 
 
+#include "SActionComponent.h"
 #include "SAttributeComponent.h"
 #include "SInteractionComponent.h"
 #include "Camera/CameraComponent.h"
@@ -30,6 +31,7 @@ ASCharacter::ASCharacter()
 	
 	InteractionComponent = CreateDefaultSubobject<USInteractionComponent>("InteractComp");
 	AttributeComponent = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
+	ActionComponent = CreateDefaultSubobject<USActionComponent>("ActionComp");
 }
 
 void ASCharacter::PostInitializeComponents()
@@ -41,19 +43,27 @@ void ASCharacter::PostInitializeComponents()
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,&ASCharacter::BeginOverlap);
 }
 
+void ASCharacter::HealSelf(float HealAmount /* = 100 */)
+{
+	AttributeComponent->ApplyHealthChange(this,HealAmount);
+}
+
+FVector ASCharacter::GetPawnViewLocation() const
+{
+	return CameraComponent->GetComponentLocation();
+}
+
 
 // Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void ASCharacter::MoveForward(float value)
@@ -108,6 +118,16 @@ void ASCharacter::AbilityTwo()
 		&ASCharacter::PrimaryAttackTimeElapsed, AbilityTwoProjectileClass);
 	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,AttackAction,0.2f,false);
 	
+}
+
+void ASCharacter::SprintStart()
+{
+	ActionComponent->StartActionByName(this,"Sprint");
+}
+
+void ASCharacter::SprintStop()
+{
+	ActionComponent->StopActionByName(this,"Sprint");
 }
 
 void ASCharacter::PrimaryAttackTimeElapsed(TSubclassOf<AActor> SpawnProjectile)
@@ -179,7 +199,9 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Jump",IE_Pressed,this,&ASCharacter::Jump);
 
 	PlayerInputComponent->BindAction("Interact",IE_Pressed,this,&ASCharacter::Interact);
-	
+
+	PlayerInputComponent->BindAction("Sprint",IE_Pressed,this,&ASCharacter::SprintStart);
+	PlayerInputComponent->BindAction("Sprint",IE_Released,this,&ASCharacter::SprintStop);
 }
 
 void ASCharacter::OnHealthChange(AActor* ActorInstigator, USAttributeComponent* OwningComp, float NewHealth, float Change)

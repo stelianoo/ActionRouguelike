@@ -51,7 +51,7 @@ void ASBaseProjectile::BeginPlay()
 void ASBaseProjectile::OnProjectileDestroyed(AActor* DestroyedActor)
 {
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(),SoundCueEnd,GetActorLocation(),FRotator::ZeroRotator);
-	UE_LOG(LogTemp,Warning,TEXT("Projectile destroyed"));
+	//UE_LOG(LogTemp,Warning,TEXT("Projectile destroyed"));
 	UGameplayStatics::PlayWorldCameraShake(GetWorld(),CameraShake,GetActorLocation(),500,2000,0.4f);
 }
 

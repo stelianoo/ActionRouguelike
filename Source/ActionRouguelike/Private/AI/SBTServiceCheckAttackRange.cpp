@@ -10,6 +10,7 @@ void USBTServiceCheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, ui
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
+	
 	UBlackboardComponent *BlackboardComponent = OwnerComp.GetBlackboardComponent();
 
 	if (ensure(BlackboardComponent))

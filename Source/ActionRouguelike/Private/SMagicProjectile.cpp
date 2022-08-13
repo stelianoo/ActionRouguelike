@@ -5,6 +5,7 @@
 
 
 #include "SAttributeComponent.h"
+#include "SGameplayFunctionLibrary.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -30,33 +31,52 @@ void ASMagicProjectile::BeginPlay()
 	SphereComponent->OnComponentHit.AddDynamic(this,&ASMagicProjectile::HitEvent);
 }
 
-void ASMagicProjectile::OverlapEvent(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
+void ASMagicProjectile::OverlapEvent(UPrimitiveComponent* PrimitiveComponent, AActor* OtherActor,
 	UPrimitiveComponent* PrimitiveComponent1, int I, bool bArg, const FHitResult& HitResult)
 {
-	if (Actor)
+	if (OtherActor && OtherActor != GetInstigator())
 	{
-		USAttributeComponent* Atribute = Cast<USAttributeComponent>(Actor->GetComponentByClass(USAttributeComponent::StaticClass()));
-		if (Atribute)
+		// USAttributeComponent* Atribute = USAttributeComponent::GetAttributes(OtherActor);
+		// if (Atribute)
+		// {
+		// 	Atribute->ApplyHealthChange(GetInstigator(),-ProjectileDamage);
+		// 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),EndParticle,GetActorLocation());
+		// 	UE_LOG(LogTemp,Warning,TEXT("Overlap"));
+		// 	Destroy();
+		// }
+
+		if(	USGameplayFunctionLibrary::ApplyDamageDirectinal(GetInstigator(),
+				OtherActor,ProjectileDamage,HitResult))
 		{
-			Atribute->ApplyHealthChange(-ProjectileDamage);
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),EndParticle,GetActorLocation());
-			UE_LOG(LogTemp,Warning,TEXT("Overlap"));
 			Destroy();
 		}
+
+		
 	}
 }
 
 void ASMagicProjectile::HitEvent(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
 	UPrimitiveComponent* PrimitiveComponent1, FVector Vector, const FHitResult& HitResult)
 {
-	if (Actor != GetInstigator())
-	{
-		UE_LOG(LogTemp,Warning,TEXT("ObjectHit"));
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),EndParticle,GetActorLocation());
-		Destroy();
-	}
-	
-	
+	// if (Actor)
+	// {
+	// 	if (Actor != GetInstigator())
+	// 	{
+	// 		//UE_LOG(LogTemp,Warning,TEXT("ObjectHit"));
+	// 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),EndParticle,GetActorLocation());
+	// 		Destroy();
+	// 	}
+	//
+	// 	USAttributeComponent* Atribute = USAttributeComponent::GetAttributes(Actor);
+	// 	if (Atribute)
+	// 	{
+	// 		Atribute->ApplyHealthChange(GetInstigator(),-ProjectileDamage);
+	// 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),EndParticle,GetActorLocation());
+	// 		//UE_LOG(LogTemp,Warning,TEXT("Overlap"));
+	// 		Destroy();
+	// 	}
+	// }
 }
 
 

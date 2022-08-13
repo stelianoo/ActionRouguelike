@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class USActionComponent;
 class ASBaseProjectile;
 class USpringArmComponent;
 class UCameraComponent;
@@ -55,6 +56,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	USAttributeComponent* AttributeComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	USActionComponent* ActionComponent;
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -64,14 +68,18 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void MoveForward(float value);
-
-
 	void MoveRight(float value);
+	
 	void PrimaryAttack();
 	void PrimaryAttackTimeElapsed(TSubclassOf<AActor> SpawnClass);
+	
 	void Interact();
 	void AbilityOne();
 	void AbilityTwo();
+
+	void SprintStart();
+	void SprintStop();
+	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -80,7 +88,15 @@ public:
 
 	UFUNCTION()
 	void BeginOverlap(UPrimitiveComponent* PrimitiveComponent, AActor* Actor, UPrimitiveComponent* PrimitiveComponent1, int I, bool bArg, const FHitResult& HitResult);
+
 	virtual void PostInitializeComponents() override;
+
+
+	UFUNCTION(Exec)
+	void HealSelf(float HealAmount = 100);
+
+	virtual FVector GetPawnViewLocation() const override;
+	
 };
 
 

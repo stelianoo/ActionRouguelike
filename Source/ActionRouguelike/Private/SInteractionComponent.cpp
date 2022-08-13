@@ -6,6 +6,12 @@
 #include "SGameplayInterface.h"
 
 
+
+static TAutoConsoleVariable<bool> CVarDrawDebug(TEXT("su.DebugDraw"),
+	false,TEXT("Draw debug visibility."),ECVF_Cheat);
+
+
+
 // Sets default values for this component's properties
 USInteractionComponent::USInteractionComponent()
 {
@@ -14,11 +20,16 @@ USInteractionComponent::USInteractionComponent()
 
 void USInteractionComponent::PrimaryInteract()
 {
+
+	bool DrawDebug = CVarDrawDebug.GetValueOnGameThread();
+	
 	FCollisionObjectQueryParams ObjQueryParam;
 	ObjQueryParam.AddObjectTypesToQuery(ECC_WorldDynamic);
 
 	AActor* MyOwner = GetOwner();
 
+	
+	
 	FVector EyeLocation;
 	FRotator EyeRotation;
 	MyOwner->GetActorEyesViewPoint(EyeLocation,EyeRotation);
@@ -32,15 +43,23 @@ void USInteractionComponent::PrimaryInteract()
 
 	if (HitActor)
 	{
+		if (DrawDebug)
+		{
+			DrawDebugSphere(GetWorld(),HitResult.Location,15,8,FColor::White,false,5,100,2);
+		}
 		if (HitActor->Implements<USGameplayInterface>())
 		{
 			APawn* MyPawn = Cast<APawn>(MyOwner);
 
 			ISGameplayInterface::Execute_Interact(HitActor,MyPawn);
-		}	
+		}
+		
 	}
-
-	DrawDebugLine(GetWorld(),EyeLocation,EndTrace,FColor::Red,false,5,100,3);
+	if (DrawDebug)
+	{
+		DrawDebugLine(GetWorld(),EyeLocation,EndTrace,FColor::Red,false,5,100,3);
+	}
+	
 	
 }
 
