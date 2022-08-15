@@ -8,7 +8,7 @@
 
 USActionComponent::USActionComponent()
 {
-	
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 
@@ -16,8 +16,18 @@ void USActionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	for (TSubclassOf<USAction> ActionClass : StartActions)
+	{
+		AddAction(ActionClass);
+	}
 	
+}
+
+void USActionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
 }
 
 void USActionComponent::AddAction(TSubclassOf<USAction> ActionClass)
@@ -42,6 +52,10 @@ bool USActionComponent::StartActionByName(AActor* Instigator, FName ActionName)
 	{
 		if (Action && Action->ActionName == ActionName)
 		{
+			if (!Action->CanStart(Instigator))
+			{
+				continue;
+			}
 			Action->StartAction(Instigator);
 			return true;
 		}
@@ -55,8 +69,11 @@ bool USActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
 	{
 		if (Action && Action->ActionName == ActionName)
 		{
-			Action->StopAction(Instigator);
-			return true;
+			if (Action->IsRunning())
+			{
+				Action->StopAction(Instigator);
+				return true;
+			}
 		}
 	}
 	return false;

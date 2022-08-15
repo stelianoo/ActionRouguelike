@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "SActionComponent.generated.h"
 
@@ -20,10 +21,17 @@ protected:
 
 	UPROPERTY()
 	TArray<USAction*> Actions;
+
+	UPROPERTY(EditAnywhere,Category="Action")
+	TArray<TSubclassOf<USAction>> StartActions;
 	
 	virtual void BeginPlay() override;
 
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 public:
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Tags")
+	FGameplayTagContainer ActiveGameplayTags;
 
 	UFUNCTION(BlueprintCallable,Category="Action")
 	void AddAction(TSubclassOf<USAction> Action);

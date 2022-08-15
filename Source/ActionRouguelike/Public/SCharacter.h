@@ -17,27 +17,6 @@ UCLASS()
 class ACTIONROUGUELIKE_API ASCharacter : public ACharacter
 {
 	GENERATED_BODY()
-protected:
-	
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Attack")
-	TSubclassOf<AActor> PrimaryAttackProjectileClass;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Attack")
-	TSubclassOf<AActor> AbilityOneProjectileClass;
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category = "Attack")
-	TSubclassOf<AActor> AbilityTwoProjectileClass;
-	
-	UPROPERTY(EditAnywhere,Category = "Attack")
-	UParticleSystem* ChargeParticle;
-	
-	UPROPERTY(EditAnywhere,Category = "Attack")
-	UAnimMontage* AnimationMontage;
-	
-	UPROPERTY(EditAnywhere,Category = "Attack")
-	float ProjectileDelay = 0.2f;
-
-	FTimerHandle TimerHandle_PrimaryAttack;
 	
 public:
 	// Sets default values for this character's properties
@@ -57,28 +36,26 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USAttributeComponent* AttributeComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	USActionComponent* ActionComponent;
 	
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
+public:
+	
 	virtual void Tick(float DeltaTime) override;
 
 	void MoveForward(float value);
 	void MoveRight(float value);
 	
 	void PrimaryAttack();
-	void PrimaryAttackTimeElapsed(TSubclassOf<AActor> SpawnClass);
-	
-	void Interact();
 	void AbilityOne();
 	void AbilityTwo();
 
 	void SprintStart();
 	void SprintStop();
+
+	void Interact();
 	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

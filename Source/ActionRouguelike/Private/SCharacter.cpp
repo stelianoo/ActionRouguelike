@@ -38,8 +38,7 @@ void ASCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	AttributeComponent->OnHealthChange.AddDynamic(this, &ASCharacter::OnHealthChange);
-	// GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,
-	// 	InteractionComponent->OnOverlapBegin);
+	
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this,&ASCharacter::BeginOverlap);
 }
 
@@ -54,13 +53,11 @@ FVector ASCharacter::GetPawnViewLocation() const
 }
 
 
-// Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-// Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -88,36 +85,17 @@ void ASCharacter::MoveRight(float value)
 
 void ASCharacter::PrimaryAttack()
 {
-	PlayAnimMontage(AnimationMontage);
-
-	
-	UGameplayStatics::SpawnEmitterAttached(ChargeParticle,GetMesh(),"Muzzle_01");
-	
-	const FTimerDelegate AttackAction  = FTimerDelegate::CreateUObject(this,
-		&ASCharacter::PrimaryAttackTimeElapsed, PrimaryAttackProjectileClass);
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,AttackAction,0.2f,false);
+	ActionComponent->StartActionByName(this,"PrimaryAttack");
 }
 
 void ASCharacter::AbilityOne()
 {
-	PlayAnimMontage(AnimationMontage);
-
-	
-	
-	const FTimerDelegate AttackAction  = FTimerDelegate::CreateUObject(this,
-		&ASCharacter::PrimaryAttackTimeElapsed, AbilityOneProjectileClass);
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,AttackAction,0.2f,false);
-	
+	ActionComponent->StartActionByName(this,"BlackHole");
 }
 
 void ASCharacter::AbilityTwo()
 {
-	PlayAnimMontage(AnimationMontage);
-
-	const FTimerDelegate AttackAction  = FTimerDelegate::CreateUObject(this,
-		&ASCharacter::PrimaryAttackTimeElapsed, AbilityTwoProjectileClass);
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack,AttackAction,0.2f,false);
-	
+	ActionComponent->StartActionByName(this,"Dash");
 }
 
 void ASCharacter::SprintStart()
@@ -130,55 +108,14 @@ void ASCharacter::SprintStop()
 	ActionComponent->StopActionByName(this,"Sprint");
 }
 
-void ASCharacter::PrimaryAttackTimeElapsed(TSubclassOf<AActor> SpawnProjectile)
-{
-	// Cast Effect
-	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),ChargeParticle,
-	// 		GetMesh()->GetSocketLocation("Muzzle_01"));
-	
-	FVector StartProjectileLocation = GetMesh()->GetSocketLocation("Muzzle_01");
-	
-	FTransform CameraTransform = CameraComponent->GetComponentTransform();
-
-	FVector CameraTraceEndPoint =
-		CameraTransform.GetLocation() + CameraTransform.GetRotation().GetForwardVector()*50000;
-	
-	FCollisionObjectQueryParams ObjQueryParam;
-	ObjQueryParam.AddObjectTypesToQuery(ECC_WorldStatic);
-	ObjQueryParam.AddObjectTypesToQuery(ECC_WorldDynamic);
-	FHitResult HitResult;
-	bool hit =	GetWorld()->LineTraceSingleByObjectType(
-		HitResult,CameraTransform.GetLocation(),CameraTraceEndPoint,ObjQueryParam);
-
-	// DrawDebugLine(GetWorld(),CameraTransform.GetLocation(),CameraTraceEndPoint,
-	// 	FColor::Blue,false,5,100,2);
-
-	FVector EndProjectileLocation =	hit? HitResult.ImpactPoint:CameraTraceEndPoint;
-
-	DrawDebugSphere(GetWorld(),EndProjectileLocation,10,10,FColor::Black,
-		false,5,10,2);
-
-	FRotator RotationToTarget = (EndProjectileLocation - StartProjectileLocation).Rotation();
-
-	FTransform SpawnTransform = FTransform(RotationToTarget,StartProjectileLocation);
-
-	FActorSpawnParameters SpawnParam;
-	SpawnParam.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParam.Instigator = this;
-	
-	GetWorld()->SpawnActor<AActor>(SpawnProjectile,SpawnTransform,SpawnParam);
-}
-
 
 
 void ASCharacter::Interact()
 {
-
 	InteractionComponent->PrimaryInteract();
-	
 }
 
-// Called to bind functionality to input
+
 void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
